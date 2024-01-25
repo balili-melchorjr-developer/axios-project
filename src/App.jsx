@@ -1,34 +1,65 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
+import { useEffect } from 'react'
+import { fetctPosts, createPost, updatePost, deletePost } from './services/apiService'
 
 function App() {
-  const [count, setCount] = useState(0)
+
+  const [posts, setPosts] = useState([])
+
+  useEffect(() => {
+    const getPosts = async() => {
+      const postData = await fetctPosts()
+      setPosts(postData)
+    }
+
+    getPosts()
+    
+  }, [])
+
+  const handleUpdatePost = async (id) => {
+    const updatedPost = {
+      title: "Updated Post",
+      body: `This is an update post ${Date.now()}`,
+      userId: 1
+    }
+    console.log(updatedPost)
+    const post = await updatePost(id, updatedPost)
+    setPosts(posts.map((p) => p.id === id ? post : p))  
+  }
+
+  const handleDeletePost = async (id) => {
+    await deletePost(id)
+    setPosts(posts.filter((p) => p.id !== id))
+  }
+
+  const handleCreatePost = async() => {
+    const newPost = {
+      title: 'New Post',
+      body: `This is new post. ${Date.now()}`,
+      user: 1
+    }
+
+    const post = await createPost(newPost)
+    setPosts([post, ...posts])
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className='app'>
+      <div className="app-container">
+        <h1 className="app-header">Posts</h1> 
+        <button className='button button-create' onClick={handleCreatePost}>Create New Post</button>
+        {posts.map((post) => (
+          <div className='post' key={post.id}>
+            <h2 className='post-title'>{post.title}</h2>
+            <p className='post-content'>{post.body}</p>
+
+            <button className='button button-update' onClick={() => handleUpdatePost(post.id)}>Update</button>
+            <button className='button button-delete'onClick={() => handleDeletePost(post.id)}>Delete</button>
+          </div>
+        ))}
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    </div>
   )
 }
 
